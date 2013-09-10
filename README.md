@@ -1,4 +1,4 @@
-# lua-shares-server - A Social Counts Server
+# lua-shares-server - A Counts Server
 
 lua-shares runs in nginx to provide a single API request return all your social-share counts. Each social network is queried server-side and in parallel. lua-shares can also cache the social counts in memcached for even faster response times on your popular pages. It can easily handle very high request volume, with consistent, low latency.
 
@@ -10,7 +10,7 @@ lua-shares was inspired by the tfrce/social-buttons-server which runs on Node. I
 * Memcached caching with configurable time-to-live
 
 
-## Requirements
+## Dependencies
 * lua - [LuaJIT](http://luajit.org/) recommended
 * nginx with the [lua-nginx-module](https://github.com/chaoslawful/lua-nginx-module) or the [ngx_openresty bundle](http://openresty.org/)
 * Lua CJSON - JSON library, http://www.kyne.com.au/~mark/software/lua-cjson.php (included in openresty)
@@ -20,8 +20,13 @@ lua-shares was inspired by the tfrce/social-buttons-server which runs on Node. I
 
 ## Installation
 
-1. Clone the reponsitory to your preferred location (/usr/local/share/lua-shares-server is a sensible path on Debian/Ubuntu).
-2. Reference lua-shares.lua from the location of your choosing e.g. / for a standalone installation or /lua-shares within a more complex configuration.
+Clone the reponsitory to your preferred location (/usr/local/share/lua-shares-server is a sensible path on Debian/Ubuntu).
+
+```
+$ git clone git@github.com:jreitz/lua-shares-server.git /usr/local/share/lua-shares-server
+```
+
+In your nginx config, reference lua-shares.lua at the location of your choosing e.g. / for a standalone installation or something like /lua-shares within a more complex configuration.
 
 ```nginx
 
@@ -36,9 +41,13 @@ server {
 }
 ```
 
-3. Reload nginx and test the API:
+Reload nginx and test the API:
 
-    curl http://hubpages.com/lua-shares/?url=http://hubpages.com
+```
+curl http://hubpages.com/lua-shares/?url=http://hubpages.com
+```
+
+Write some JS and make some social buttons that use this server and tell me about them so that I can reference them here.
 
 
 ## TODO
