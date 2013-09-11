@@ -34,11 +34,14 @@ local function csplit(str, sep)
 end
 
 local function parse_uri_args()
-  -- parse url= param
+  -- parse url= param (or use Referer header if present)
   local url = ngx.req.get_uri_args()["url"]
   if not url then
-    error_say("Missing required \"url\" parameter")
-    ngx.exit(ngx.ERROR)
+    url = ngx.req.get_headers()["Referer"]
+  end
+  if not url then
+    error_say("Missing required \"url\" parameter and no referer header provided")
+    ngx.exit(ngx.OK)
   end
 
   -- parse optional networks= param, expects comma seperated
@@ -50,6 +53,12 @@ local function parse_uri_args()
   end
 
   return url, fetch_networks
+end
+
+local function get_req(host, options)
+  local http = require "resty.http.simple"
+  options.timeout = http_fetch_timeout
+  return http.request(host, 80, options)
 end
 
 local function is_good_http_response(name, res, err)
@@ -94,11 +103,9 @@ local function persist_memcached(json)
 end
 
 function http_query_twitter()
-  local http = require "resty.http.simple"
-  local res, err = http.request("urls.api.twitter.com", 80, {
+  local res, err = get_req("urls.api.twitter.com", {
     path    = "/1/urls/count.json",
     query   = { ["url"] = url },
-    timeout = http_fetch_timeout,
   })
 
   if is_good_http_response("twitter", res, err) then
@@ -111,12 +118,10 @@ function http_query_twitter()
 end
 
 function http_query_facebook()
-  local http = require "resty.http.simple"
-  local res, err = http.request("graph.facebook.com", 80, {
+  local res, err = get_req("graph.facebook.com", {
     path    = "/",
     query   = { ["id"] = url },
     headers = { ["Accept"] = "application/json" },
-    timeout = http_fetch_timeout,
   })
 
   if is_good_http_response("facebook", res, err) then
@@ -132,12 +137,10 @@ function http_query_facebook()
 end
 
 function http_query_pinterest()
-  local http = require "resty.http.simple"
-  local res, err = http.request("api.pinterest.com", 80, {
+  local res, err = get_req("api.pinterest.com", {
     path    = "/v1/urls/count.json",
     query   = { ["url"] = url, ["callback"] = "" },
     headers = { ["Accept"] = "application/json" },
-    timeout = http_fetch_timeout,
   })
 
   if is_good_http_response("pinterest", res, err) then
@@ -152,11 +155,9 @@ function http_query_pinterest()
 end
 
 function http_query_linkedin()
-  local http = require "resty.http.simple"
-  local res, err = http.request("www.linkedin.com", 80, {
+  local res, err = get_req("www.linkedin.com", {
     path    = "/countserv/count/share",
     query   = { ["url"] = url, ["format"] = "json" },
-    timeout = http_fetch_timeout,
   })
 
   if is_good_http_response("linkedin", res, err) then
@@ -171,7 +172,6 @@ end
 
 --
 -- main
-
 url, fetch_networks = parse_uri_args()
 
 -- check memcached (if enabled)
