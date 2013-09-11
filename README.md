@@ -2,11 +2,11 @@
 
 lua-shares runs in nginx to provide a single API request return all your social-share counts. Each social network is queried server-side and in parallel. lua-shares can also cache the social counts in memcached for even faster response times on your popular pages. It can easily handle very high request volume, with consistent, low latency.
 
-lua-shares was inspired by the tfrce/social-buttons-server which runs on Node. It aims to have a (mostly) indentical API so that any social buttons should work with either implementation.
+lua-shares was inspired by the tfrce/social-buttons-server which runs on Node. It aims to have an identical API so that any social buttons should work with either implementation.
 
 ## Features
 * Fast and simple
-* Supports Pinterest, Twitter and Facebook
+* Supports Pinterest, LinkedIn, Twitter and Facebook
 * Memcached caching with configurable time-to-live
 
 
@@ -53,7 +53,6 @@ Write some JS and make some social buttons that use this server and tell me abou
 ## TODO
 * Handle more exotic URLs; respond only for specific whitelisted URLs
 * Google-plus support (currently waiting on TLS support from lua-nginx)
-* LinkedIn support
 * Self-contained or embedded HTTP client
 * Self-contained social-buttons implementation
 * API timing and statsd support; for monitoring upstream social APIs
