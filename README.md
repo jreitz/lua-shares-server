@@ -7,6 +7,7 @@ lua-shares was inspired by the tfrce/social-buttons-server which runs on Node. I
 ## Features
 * Fast and simple
 * Supports Pinterest, LinkedIn, Twitter and Facebook
+* Configurable whitelist to only query for your own URLs
 * Memcached caching with configurable time-to-live
 
 
@@ -30,13 +31,15 @@ In your nginx config, reference lua-shares.lua at the location of your choosing 
 
 ```nginx
 
-init_by_lua 'cjson = require "cjson"';
+lua_package_path '/usr/local/share/lua-shares/server/?.lua;;';
+init_by_lua '
+        cjson = require "cjson"
+        shares = require "lua_shares"
+';
 
 server {
-
     location = /lua-shares {
-        access_log off;
-        content_by_lua_file "/usr/local/share/lua-shares-server/lua-shares.lua";
+        content_by_lua 'shares.get_counts()';
     }
 }
 ```
@@ -51,7 +54,7 @@ Write some JS and make some social buttons that use this server and tell me abou
 
 
 ## TODO
-* Handle more exotic URLs; respond only for specific whitelisted URLs
+* Better README
 * Google-plus support (currently waiting on TLS support from lua-nginx)
 * Self-contained or embedded HTTP client
 * Self-contained social-buttons implementation
