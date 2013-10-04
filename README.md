@@ -9,14 +9,15 @@ lua-shares was inspired by the tfrce/social-buttons-server which runs on Node. I
 * Supports Pinterest, LinkedIn, Twitter and Facebook
 * Configurable whitelist to only query for your own URLs
 * Memcached caching with configurable time-to-live
+* Expires header support for easy CDN caching
 
 
 ## Dependencies
 * lua - [LuaJIT](http://luajit.org/) recommended
 * nginx with the [lua-nginx-module](https://github.com/chaoslawful/lua-nginx-module) or the [ngx_openresty bundle](http://openresty.org/)
 * Lua CJSON - JSON library, http://www.kyne.com.au/~mark/software/lua-cjson.php (included in openresty)
-* Resty Memcached - Memcached client, https://github.com/agentzh/lua-resty-memcached (included in openresty)
 * Resty HTTP Simple - HTTP client, https://github.com/bakins/lua-resty-http-simple
+* Resty Memcached - Optional memcached client, https://github.com/agentzh/lua-resty-memcached (included in openresty)
 
 
 ## Installation
@@ -52,13 +53,31 @@ curl http://hubpages.com/lua-shares/?url=http://hubpages.com
 
 Write some JS and make some social buttons that use this server and tell me about them so that I can reference them here.
 
+## Usage
+
+### API parameters
+
+Lua-shares responds to two optional query parameters:
+
+#### url=
+
+The URL for which you want to receive social-shares count information. If this parameter is missing, the referrer, which normally points to the calling page, is used. If no scheme is provided, http: will be assumed.
+
+#### networks
+
+A comma-seperated list of social networks to be queried. Supported values are: facebook,pinterest,twitter,linkedin. If not provided, the default networks queried are: facebook,pinterest,twitter.
+
+### Advanced configuration
+
+The lua source contains a number of options for memcached server, timeouts and other behavior. Look there for more details.
+
 
 ## TODO
-* Better README
-* Google-plus support (currently waiting on TLS support from lua-nginx)
 * Self-contained or embedded HTTP client
 * Self-contained social-buttons implementation
+* Prefetching popular URLs
 * API timing and statsd support; for monitoring upstream social APIs
+* Google-plus support (currently waiting on TLS support from lua-nginx)
 
 
 ## License

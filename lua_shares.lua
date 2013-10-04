@@ -24,6 +24,13 @@ local config = {
   memcached_key_prefix = "luashares:", -- url is appended
   memcached_host = "127.0.0.1", -- only a single host is currently supported
   memcached_pool_size = 40,
+
+  -- expires header configuration to allow browser and/or CDN caching:
+  --   NOTE: the expires_ttl is currently additive to the memcached_ttl, such that
+  --     a given count response could be up to (memcached_ttl + expires_ttl) stale
+  --     but this behavior might change in the future
+  expires_header = true, -- set to false to disable expires header
+  expires_ttl = 60, -- secs
 }
 shares.config = config
 
@@ -32,6 +39,14 @@ local function error_say(...)
   ngx.log(ngx.WARN, ...)
   -- return -- uncomment to disable showing errors in the response
   ngx.print("/* ", ...); ngx.say(" */")
+end
+
+local function response_say(json)
+  if config.expires_header then
+    ngx.header.Expires = os.date("%a, %d %b %Y %H:%M:%S GMT", ngx.now() + config.expires_ttl)
+  end
+  ngx.say(json)
+  ngx.eof()
 end
 
 local function csplit(str, sep)
@@ -222,7 +237,7 @@ function shares.get_counts()
     memc = config.memcached:new()
     local json = query_memcached(memc, url)
     if json then
-      ngx.say(json); return
+      response_say(json); return
     end
   end
 
@@ -232,8 +247,7 @@ function shares.get_counts()
 
   -- encode results into json and send to client
   local json = cjson.encode(results)
-  ngx.say(json)
-  ngx.eof()
+  response_say(json)
 
   -- store in memcached if enabled
   if memc and not fetching_error then
