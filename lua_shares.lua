@@ -3,8 +3,6 @@
 -- (inspired by tfrce/social-buttons-server)
 --
 
-local shares = {}
-
 local config = {
 
   -- url_whitelist_regex:
@@ -16,14 +14,14 @@ local config = {
 
   -- supported networks: "facebook", "pinterest", "twitter", "linkedin"
   http_fetch_default_networks = { "facebook", "pinterest", "twitter" },
-  http_fetch_timeout = 3000, -- msecs
+  http_fetch_timeout = 3000, -- msecs, this caps the maximum wait time for your buttons
 
   -- memcached cache configuration:
   memcached = require "resty.memcached", -- set to false to disable caching
-  memcached_ttl = 300, -- secs (0 is never expire)
-  memcached_key_prefix = "luashares:", -- url is appended
-  memcached_host = "127.0.0.1", -- only a single host is currently supported
-  memcached_pool_size = 40,
+  memcached_ttl = 300,                   -- secs (0 is never expire)
+  memcached_key_prefix = "luashares:",   -- url is appended
+  memcached_host = "127.0.0.1",          -- only a single host is currently supported
+  memcached_pool_size = 40,              -- count of connections in pool to memc server
 
   -- expires header configuration to allow browser and/or CDN caching:
   --   NOTE: the expires_ttl is currently additive to the memcached_ttl, such that
@@ -32,8 +30,18 @@ local config = {
   expires_header = true, -- set to false to disable expires header
   expires_ttl = 60, -- secs
 }
+
+local shares = {}
 shares.config = config
 
+-- load cjson library
+if not cjson then
+  ngx.log(ngx.ERR, "Initing cjson")
+  cjson = require "cjson"
+  if not cjson then
+    ngx.log(ngx.ERR, "Unable to initialize cjson, check your lua_package_path")
+  end
+end
 
 local function error_say(...)
   ngx.log(ngx.WARN, ...)
@@ -198,16 +206,20 @@ end
 function shares.http_query_pinterest(url)
   local res, err = get_req("api.pinterest.com", {
     path    = "/v1/urls/count.json",
-    query   = { ["url"] = url, ["callback"] = "" },
+    query   = { ["url"] = url, ["callback"] = "luashares" },
     headers = { ["Accept"] = "application/json" },
   })
 
   if is_good_http_response("pinterest", res, err) then
-    -- first, remove surrounding ( and )
-    local scrubbed_body = string.match(res.body, "^%(([^)]+)")
-    res.data = cjson.decode(scrubbed_body)
-    if res.data and res.data.count then
-      return res.data.count
+    -- first, remove surrounding callback function with ( and )
+    local scrubbed_body = string.match(res.body, "^luashares%(([^)]+)")
+    if scrubbed_body then
+      res.data = cjson.decode(scrubbed_body)
+      if res.data and res.data.count then
+        return res.data.count
+      end
+    else
+      error_say("Unexpected callback-wrapped response from pinterest: ", res.body)
     end
   end
   return -1
@@ -256,3 +268,4 @@ function shares.get_counts()
 end
 
 return shares
+

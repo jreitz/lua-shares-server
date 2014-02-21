@@ -1,6 +1,6 @@
 # lua-shares-server - A Counts Server
 
-lua-shares runs in nginx to provide a single API request return all your social-share counts. Each social network is queried server-side and in parallel. lua-shares can also cache the social counts in memcached for even faster response times on your popular pages. It can easily handle very high request volume, with consistent, low latency.
+lua-shares runs in nginx to provide a single API request return all your social-share counts. Each social network is queried server-side and in parallel. Typically this saves more than a second of page load time and can prevent your page from hanging if one of the social APIs is down or slow. lua-shares can also cache the social counts in memcached for even faster response times on your popular pages. It can easily handle very high request volume, with consistent, low latency. On modest hardware, time to first byte is sub-5ms for cached URLs and there is negligible latency on top of the slowest returning social API for uncached requests.
 
 lua-shares was inspired by the tfrce/social-buttons-server which runs on Node. It aims to have an identical API so that any social buttons should work with either implementation.
 
@@ -34,8 +34,7 @@ In your nginx config, reference lua-shares.lua at the location of your choosing 
 
 lua_package_path '/usr/local/share/lua-shares/server/?.lua;;';
 init_by_lua '
-        cjson = require "cjson"
-        shares = require "lua_shares"
+    shares = require "lua_shares"
 ';
 
 server {
@@ -74,7 +73,7 @@ The lua source contains a number of options for memcached server, timeouts and o
 
 ## TODO
 * Self-contained or embedded HTTP client
-* Self-contained social-buttons implementation
+* Self-contained reference social-buttons implementation
 * Prefetching popular URLs
 * API timing and statsd support; for monitoring upstream social APIs
 * Google-plus support (currently waiting on TLS support from lua-nginx)
@@ -83,7 +82,7 @@ The lua source contains a number of options for memcached server, timeouts and o
 ## License
 The MIT License (MIT)
 
-Copyright (c) 2013 Jay Reitz
+Copyright (c) 2014 Jay Reitz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
